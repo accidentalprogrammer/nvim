@@ -320,6 +320,12 @@ require('lazy').setup({
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      {
+        'nvim-telescope/telescope-live-grep-args.nvim',
+        -- This will not install any breaking changes.
+        -- For major updates, this must be adjusted manually.
+        version = '^1.0.0',
+      },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -363,7 +369,7 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
-
+      require('telescope').load_extension 'live_grep_args'
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
@@ -399,6 +405,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+      vim.keymap.set('n', '<leader>fg', ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>")
     end,
   },
 
@@ -583,6 +590,10 @@ require('lazy').setup({
             },
           },
         },
+        angularls = {},
+        cssls = {},
+        kotlin_language_server = {},
+        -- css_variables = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -616,42 +627,42 @@ require('lazy').setup({
     end,
   },
 
-  { -- Autoformat
-    'stevearc/conform.nvim',
-    lazy = false,
-    keys = {
-      {
-        '<leader>f',
-        function()
-          require('conform').format { async = true, lsp_fallback = true }
-        end,
-        mode = '',
-        desc = '[F]ormat buffer',
-      },
-    },
-    opts = {
-      notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true, vue = true, ex = true }
-        return {
-          timeout_ms = 500,
-          lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-        }
-      end,
-      formatters_by_ft = {
-        lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use a sub-list to tell conform to run *until* a formatter
-        -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
-      },
-    },
-  },
+  -- { -- Autoformat
+  --   'stevearc/conform.nvim',
+  --   lazy = false,
+  --   keys = {
+  --     {
+  --       '<leader>f',
+  --       function()
+  --         require('conform').format { async = true, lsp_fallback = true }
+  --       end,
+  --       mode = '',
+  --       desc = '[F]ormat buffer',
+  --     },
+  --   },
+  --   opts = {
+  --     notify_on_error = false,
+  --     format_on_save = function(bufnr)
+  --       -- Disable "format_on_save lsp_fallback" for languages that don't
+  --       -- have a well standardized coding style. You can add additional
+  --       -- languages here or re-enable it for the disabled ones.
+  --       local disable_filetypes = { c = true, cpp = true, vue = true, ex = true, ts = true }
+  --       return {
+  --         timeout_ms = 500,
+  --         lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
+  --       }
+  --     end,
+  --     formatters_by_ft = {
+  --       lua = { 'stylua' },
+  --       -- Conform can also run multiple formatters sequentially
+  --       -- python = { "isort", "black" },
+  --       --
+  --       -- You can use a sub-list to tell conform to run *until* a formatter
+  --       -- is found.
+  --       -- javascript = { { "prettierd", "prettier" } },
+  --     },
+  --   },
+  -- },
 
   { -- Autocompletion
     'hrsh7th/nvim-cmp',
@@ -774,6 +785,11 @@ require('lazy').setup({
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
+    opts = {
+      on_colors = function(colors)
+        colors.bg = '#0C0C0C'
+      end,
+    },
   },
 
   -- Highlight todo, notes, etc in comments
@@ -886,6 +902,43 @@ require('lazy').setup({
       'rcarriga/nvim-notify',
     },
   },
+  {
+    'kdheepak/lazygit.nvim',
+    cmd = {
+      'LazyGit',
+      'LazyGitConfig',
+      'LazyGitCurrentFile',
+      'LazyGitFilter',
+      'LazyGitFilterCurrentFile',
+    },
+    -- optional for floating window border decoration
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    -- setting the keybinding for LazyGit with 'keys' is recommended in
+    -- order to load the plugin when the command is run for the first time
+    keys = {
+      { '<leader>lg', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
+    },
+  },
+  'sindrets/diffview.nvim',
+  {
+    "christoomey/vim-tmux-navigator",
+    cmd = {
+      "TmuxNavigateLeft",
+      "TmuxNavigateDown",
+      "TmuxNavigateUp",
+      "TmuxNavigateRight",
+      "TmuxNavigatePrevious",
+    },
+    keys = {
+      { "<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>" },
+      { "<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>" },
+      { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
+      { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
+      { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
+    },
+  },
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -905,6 +958,42 @@ require('lazy').setup({
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   -- { import = 'custom.plugins' },
+  -- {
+  --   'huggingface/llm.nvim',
+  --   opts = {
+  --     api_token = nil, -- cf Install paragraph
+  --     model = "mistral", -- the model ID, behavior depends on backend
+  --     backend = "ollama", -- backend ID, "huggingface" | "ollama" | "openai" | "tgi"
+  --     url = "http://localhost:11434", -- the http url of the backend
+  --     tokens_to_clear = { "<|endoftext|>" }, -- tokens to remove from the model's output
+  --     -- parameters that are added to the request body, values are arbitrary, you can set any field:value pair here it will be passed as is to the backend
+  --     request_body = {
+  --       parameters = {
+  --         max_new_tokens = 60,
+  --         temperature = 0.2,
+  --         top_p = 0.95,
+  --       },
+  --     },
+  --     -- set this if the model supports fill in the middle
+  --     fim = {
+  --       enabled = true,
+  --       prefix = "<fim_prefix>",
+  --       middle = "<fim_middle>",
+  --       suffix = "<fim_suffix>",
+  --     },
+  --     debounce_ms = 150,
+  --     accept_keymap = "<Tab>",
+  --     dismiss_keymap = "<S-Tab>",
+  --     tls_skip_verify_insecure = false,
+  --     -- llm-ls configuration, cf llm-ls section
+  --     tokenizer = nil, -- cf Tokenizer paragraph
+  --     context_window = 1024, -- max number of tokens for the context window
+  --     enable_suggestions_on_startup = true,
+  --     enable_suggestions_on_files = "*", -- pattern matching syntax to enable suggestions on specific files, either a string or a list of strings
+  --     disable_url_path_completion = false, -- cf Backend
+  --
+  --   }
+  -- }
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
