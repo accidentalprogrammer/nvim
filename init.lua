@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -273,23 +273,24 @@ require('lazy').setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
-  { -- Useful plugin to show you pending keybinds.
-    'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    config = function() -- This is the function that runs, AFTER loading
-      require('which-key').setup()
-
-      -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-      }
-    end,
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      -- your configuration comes here
+      -- or leave it empty to use the default settings
+      -- refer to the configuration section below
+    },
+    keys = {
+      {
+        "<leader>?",
+        function()
+          require("which-key").show({ global = false })
+        end,
+        desc = "Buffer Local Keymaps (which-key)",
+      },
+    },
   },
-
   -- NOTE: Plugins can specify dependencies.
   --
   -- The dependencies are proper plugin specifications as well - anything
@@ -364,6 +365,11 @@ require('lazy').setup({
             require('telescope.themes').get_dropdown(),
           },
         },
+        defaults = {
+          file_ignore_patterns = {
+            "vendor/",
+          },
+        }
       }
 
       -- Enable Telescope extensions if they are installed
@@ -557,9 +563,9 @@ require('lazy').setup({
         -- But for many setups, the LSP (`tsserver`) will work just fine
         -- tsserver = {},
         --
-        volar = {},
+        vue_ls = {},
         elixirls = {},
-        tsserver = {
+        ts_ls = {
           init_options = {
             plugins = {
               {
@@ -593,6 +599,9 @@ require('lazy').setup({
         angularls = {},
         cssls = {},
         kotlin_language_server = {},
+        pyright = {},
+        gopls = {},
+        bashls = {},
         -- css_variables = {},
       }
 
@@ -887,20 +896,56 @@ require('lazy').setup({
     'lewis6991/gitsigns.nvim',
   },
   -- lazy.nvim
+  -- {
+  --   'folke/noice.nvim',
+  --   event = 'VeryLazy',
+  --   opts = {
+  --     -- add any options here
+  --   },
+  --   dependencies = {
+  --     -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
+  --     'MunifTanjim/nui.nvim',
+  --     -- OPTIONAL:
+  --     --   `nvim-notify` is only needed, if you want to use the notification view.
+  --     --   If not available, we use `mini` as the fallback
+  --     'rcarriga/nvim-notify',
+  --   },
+  -- },
+  -- -- lazy.nvim
   {
-    'folke/noice.nvim',
-    event = 'VeryLazy',
+    "folke/noice.nvim",
+    event = "VeryLazy",
     opts = {
       -- add any options here
     },
     dependencies = {
       -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
-      'MunifTanjim/nui.nvim',
+      "MunifTanjim/nui.nvim",
       -- OPTIONAL:
       --   `nvim-notify` is only needed, if you want to use the notification view.
       --   If not available, we use `mini` as the fallback
-      'rcarriga/nvim-notify',
+      "rcarriga/nvim-notify",
     },
+    config = function ()
+      require("noice").setup({
+        lsp = {
+          -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
+          override = {
+            ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+            ["vim.lsp.util.stylize_markdown"] = true,
+            ["cmp.entry.get_documentation"] = true, -- requires hrsh7th/nvim-cmp
+          },
+        },
+        -- you can enable a preset for easier configuration
+        presets = {
+          bottom_search = true, -- use a classic bottom cmdline for search
+          command_palette = true, -- position the cmdline and popupmenu together
+          long_message_to_split = true, -- long messages will be sent to a split
+          inc_rename = false, -- enables an input dialog for inc-rename.nvim
+          lsp_doc_border = false, -- add a border to hover docs and signature help
+        },
+      })
+    end
   },
   {
     'kdheepak/lazygit.nvim',
@@ -937,6 +982,343 @@ require('lazy').setup({
       { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
       { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
       { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
+    },
+  },
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    dependencies = { "nvim-lua/plenary.nvim" }
+  },
+  {
+    "olimorris/codecompanion.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    opts = {
+      strategies = {
+        -- Change the default chat adapter
+        chat = {
+          adapter = "ollama",
+          model = "phi4-mini",
+        },
+        inline = {
+          adapter = "ollama",
+          model = "phi4-mini",
+        },
+        cmd = {
+          adapter = "ollama",
+          model = "phi4-mini",
+        }
+      },
+      opts = {
+        -- Set debug logging
+        log_level = "DEBUG",
+      },
+    },
+    config = function()
+      require("codecompanion").setup({
+        strategies = {
+          chat = {
+            adapter = "ollama",
+            model = "phi4-mini",
+          },
+          inline = {
+            adapter = "ollama",
+            model = "phi4-mini",
+          },
+          cmd = {
+            adapter = "ollama",
+            model = "phi4-mini",
+          }
+        },
+      })
+    end,
+  },
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "markdown", "codecompanion" }
+  },
+  {
+    "echasnovski/mini.diff",
+    -- config = function()
+    --   local diff = require("mini.diff")
+    --   diff.setup({
+    --     -- Disabled by default
+    --     source = diff.gen_source.none(),
+    --   })
+    -- end,
+  },
+  {
+    "HakonHarnes/img-clip.nvim",
+    opts = {
+      filetypes = {
+        codecompanion = {
+          prompt_for_file_name = false,
+          template = "[Image]($FILE_PATH)",
+          use_absolute_path = true,
+        },
+      },
+    },
+  },
+  { "nvim-tree/nvim-web-devicons",
+    opts = {},
+    config = function ()
+      require'nvim-web-devicons'.setup {
+        -- your personal icons can go here (to override)
+        -- you can specify color or cterm_color instead of specifying both of them
+        -- DevIcon will be appended to `name`
+        override = {
+          zsh = {
+            icon = "",
+            color = "#428850",
+            cterm_color = "65",
+            name = "Zsh"
+          }
+        };
+        -- globally enable different highlight colors per icon (default to true)
+        -- if set to false all icons will have the default icon's color
+        color_icons = true;
+        -- globally enable default icons (default to false)
+        -- will get overriden by `get_icons` option
+        default = true;
+        -- globally enable "strict" selection of icons - icon will be looked up in
+        -- different tables, first by filename, and if not found by extension; this
+        -- prevents cases when file doesn't have any extension but still gets some icon
+        -- because its name happened to match some extension (default to false)
+        strict = true;
+        -- set the light or dark variant manually, instead of relying on `background`
+        -- (default to nil)
+        variant = "light|dark";
+        -- same as `override` but specifically for overrides by filename
+        -- takes effect when `strict` is true
+        override_by_filename = {
+          [".gitignore"] = {
+            icon = "",
+            color = "#f1502f",
+            name = "Gitignore"
+          }
+        };
+        -- same as `override` but specifically for overrides by extension
+        -- takes effect when `strict` is true
+        override_by_extension = {
+          ["log"] = {
+            icon = "",
+            color = "#81e043",
+            name = "Log"
+          }
+        };
+        -- same as `override` but specifically for operating system
+        -- takes effect when `strict` is true
+        override_by_operating_system = {
+          ["apple"] = {
+            icon = "",
+            color = "#A2AAAD",
+            cterm_color = "248",
+            name = "Apple",
+          },
+        };
+      }
+    end
+  },
+  { 'mfussenegger/nvim-jdtls' },
+  {
+    "mfussenegger/nvim-dap",
+    dependencies = {
+      "mfussenegger/nvim-dap",
+      "nvim-neotest/nvim-nio"  -- Required dependency
+    },
+    config = function()
+      require("dap")
+    end
+  },
+  {
+    "rcarriga/nvim-dap-ui",
+    config = function()
+      require("dapui").setup()
+      require("dap").listeners.after.event_initialized["dapui_config"] = function()
+        require("dapui").open()
+      end
+    end
+  },
+  {
+    "mfussenegger/nvim-dap",
+    dependencies = {
+      "rcarriga/nvim-dap-ui",       -- Optional, for UI
+      "leoluz/nvim-dap-go",         -- Go-specific dap config
+      "nvim-neotest/nvim-nio",      -- Required for nvim-dap-go
+    },
+    config = function()
+      require("dap-go").setup()
+    end
+  },
+  {
+    "luukvbaal/statuscol.nvim", config = function()
+      -- local builtin = require("statuscol.builtin")
+      require("statuscol").setup({
+        -- configuration goes here, for example:
+        -- relculright = true,
+        -- segments = {
+        --   { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
+        --   {
+        --     sign = { namespace = { "diagnostic/signs" }, maxwidth = 2, auto = true },
+        --     click = "v:lua.ScSa"
+        --   },
+        --   { text = { builtin.lnumfunc }, click = "v:lua.ScLa", },
+        --   {
+        --     sign = { name = { ".*" }, maxwidth = 2, colwidth = 1, auto = true, wrap = true },
+        --     click = "v:lua.ScSa"
+        --   },
+        -- }
+      })
+    end,
+  },
+  {
+    'mrcjkb/haskell-tools.nvim',
+    version = '^6', -- Recommended
+    lazy = false, -- This plugin is already lazy
+  },
+  {
+    "hedyhli/outline.nvim",
+    config = function()
+      -- Example mapping to toggle outline
+      vim.keymap.set("n", "<leader>o", "<cmd>Outline<CR>",
+        { desc = "Toggle Outline" })
+
+      require("outline").setup {
+        -- Your setup opts here (leave empty to use defaults)
+      }
+    end,
+  },
+  {
+    "chrisgrieser/nvim-origami",
+    event = "VeryLazy",
+    opts = {}, -- needed even when using default config
+
+    -- recommended: disable vim's auto-folding
+    init = function()
+      vim.opt.foldlevel = 99
+      vim.opt.foldlevelstart = 99
+    end,
+  },
+  {
+    "jellydn/hurl.nvim",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      -- Optional, for markdown rendering with render-markdown.nvim
+      {
+        'MeanderingProgrammer/render-markdown.nvim',
+        opts = {
+          file_types = { "markdown" },
+        },
+        ft = { "markdown" },
+      },
+    },
+    ft = "hurl",
+    opts = {
+      -- Show debugging info
+      debug = false,
+      -- Show notification on run
+      show_notification = false,
+      -- Show response in popup or split
+      mode = "split",
+      -- Default formatter
+      formatters = {
+        json = { 'jq' }, -- Make sure you have install jq in your system, e.g: brew install jq
+        html = {
+          'prettier', -- Make sure you have install prettier in your system, e.g: npm install -g prettier
+          '--parser',
+          'html',
+        },
+        xml = {
+          'tidy', -- Make sure you have installed tidy in your system, e.g: brew install tidy-html5
+          '-xml',
+          '-i',
+          '-q',
+        },
+      },
+      -- Default mappings for the response popup or split views
+      mappings = {
+        close = 'q', -- Close the response popup or split view
+        next_panel = '<C-n>', -- Move to the next response popup window
+        prev_panel = '<C-p>', -- Move to the previous response popup window
+      },
+    },
+    keys = {
+      -- Run API request
+      { "<leader>A", "<cmd>HurlRunner<CR>", desc = "Run All requests" },
+      { "<leader>a", "<cmd>HurlRunnerAt<CR>", desc = "Run Api request" },
+      { "<leader>te", "<cmd>HurlRunnerToEntry<CR>", desc = "Run Api request to entry" },
+      { "<leader>tE", "<cmd>HurlRunnerToEnd<CR>", desc = "Run Api request from current entry to end" },
+      { "<leader>tm", "<cmd>HurlToggleMode<CR>", desc = "Hurl Toggle Mode" },
+      { "<leader>tv", "<cmd>HurlVerbose<CR>", desc = "Run Api in verbose mode" },
+      { "<leader>tV", "<cmd>HurlVeryVerbose<CR>", desc = "Run Api in very verbose mode" },
+      -- Run Hurl request in visual mode
+      { "<leader>h", ":HurlRunner<CR>", desc = "Hurl Runner", mode = "v" },
+    },
+  },
+  {
+    "yetone/avante.nvim",
+    -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+    -- ⚠️ must add this setting! ! !
+    build = vim.fn.has("win32") ~= 0
+      and "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false"
+      or "make",
+    event = "VeryLazy",
+    version = false, -- Never set this value to "*"! Never!
+    ---@module 'avante'
+    ---@type avante.Config
+    opts = {
+      -- add any opts here
+      -- this file can contain specific instructions for your project
+      instructions_file = "avante.md",
+      -- for example
+      provider = "ollama",
+      vendors = {
+        ollama = {
+          model = "qwen2.5-coder:7b",
+        },
+      },
+    },
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "MunifTanjim/nui.nvim",
+      --- The below dependencies are optional,
+      "nvim-mini/mini.pick", -- for file_selector provider mini.pick
+      "nvim-telescope/telescope.nvim", -- for file_selector provider telescope
+      "hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions
+      "ibhagwan/fzf-lua", -- for file_selector provider fzf
+      "stevearc/dressing.nvim", -- for input provider dressing
+      "folke/snacks.nvim", -- for input provider snacks
+      "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+      "zbirenbaum/copilot.lua", -- for providers='copilot'
+      {
+        -- support for image pasting
+        "HakonHarnes/img-clip.nvim",
+        event = "VeryLazy",
+        opts = {
+          -- recommended settings
+          default = {
+            embed_image_as_base64 = false,
+            prompt_for_file_name = false,
+            drag_and_drop = {
+              insert_mode = true,
+            },
+            -- required for Windows users
+            use_absolute_path = true,
+          },
+        },
+      },
+      {
+        -- Make sure to set this up properly if you have lazy=true
+        'MeanderingProgrammer/render-markdown.nvim',
+        opts = {
+          file_types = { "markdown", "Avante" },
+        },
+        ft = { "markdown", "Avante" },
+      },
     },
   },
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
@@ -1187,3 +1569,83 @@ vim.wo.number = true
 vim.wo.relativenumber = true
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+local harpoon = require('harpoon')
+harpoon:setup({})
+
+-- basic telescope configuration
+local conf = require("telescope.config").values
+local function toggle_telescope(harpoon_files)
+    local file_paths = {}
+    for _, item in ipairs(harpoon_files.items) do
+        table.insert(file_paths, item.value)
+    end
+
+    require("telescope.pickers").new({}, {
+        prompt_title = "Harpoon",
+        finder = require("telescope.finders").new_table({
+            results = file_paths,
+        }),
+        previewer = conf.file_previewer({}),
+        sorter = conf.generic_sorter({}),
+    }):find()
+end
+
+vim.keymap.set("n", "<C-e>", function() toggle_telescope(harpoon:list()) end,
+    { desc = "Open harpoon window" })
+vim.keymap.set("n", "<leader>a", function() harpoon:list():add() end)
+vim.keymap.set("n", "<C-e>", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
+
+vim.keymap.set("n", "<C-h>", function() harpoon:list():select(1) end)
+vim.keymap.set("n", "<C-t>", function() harpoon:list():select(2) end)
+vim.keymap.set("n", "<C-n>", function() harpoon:list():select(3) end)
+vim.keymap.set("n", "<C-s>", function() harpoon:list():select(4) end)
+
+-- Toggle previous & next buffers stored within Harpoon list
+vim.keymap.set("n", "<C-S-P>", function() harpoon:list():prev() end)
+vim.keymap.set("n", "<C-S-N>", function() harpoon:list():next() end)
+
+vim.keymap.set("n", "<leader>dc", function() require('jdtls').test_class() end, { desc = "Debug Java class" })
+vim.keymap.set("n", "<leader>dn", function() require('jdtls').test_nearest_method() end, { desc = "Debug nearest test method" })
+vim.keymap.set("n", "<leader>du", require("dapui").toggle, { desc = "Toggle DAP UI" })
+
+vim.keymap.set('n', '<F5>', function() require'dap'.continue() end)
+vim.keymap.set('n', '<F10>', function() require'dap'.step_over() end)
+vim.keymap.set('n', '<F11>', function() require'dap'.step_into() end)
+vim.keymap.set('n', '<F12>', function() require'dap'.step_out() end)
+vim.keymap.set('n', '<Leader>b', function() require'dap'.toggle_breakpoint() end)
+vim.keymap.set('n', '<Leader>B', function() require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: ')) end)
+
+vim.keymap.set('n', '<Leader>dui', function() require'dapui'.toggle() end)
+
+vim.keymap.set('n', '<Leader>sc', function()
+  -- 1. Create a new tab page
+  vim.cmd('tabnew')
+
+  -- 2. Create a buffer that is scratch (true) and not listed (false)
+  local buf = vim.api.nvim_create_buf(false, true)
+
+  -- 3. Set the current buffer of the new window to our scratch buffer
+  vim.api.nvim_set_current_buf(buf)
+  
+  -- Optional: Set 'bufhidden' to wipe so it cleans up entirely on close
+  vim.bo[buf].bufhidden = 'wipe'
+end, { desc = 'Open Scratch Buffer in New Tab' })
+
+vim.keymap.set('n', '<Leader>q', ':close<CR>')
+-- vim.opt.rtp:append("~/misc_projects/codecompanion.nvim")
+-- require("codecompanion").setup({
+--   strategies = {
+--     chat = {
+--       adapter = "ollama",
+--       model = "phi4-mini",
+--     },
+--     inline = {
+--       adapter = "ollama",
+--       model = "phi4-mini",
+--     },
+--     cmd = {
+--       adapter = "ollama",
+--       model = "phi4-mini",
+--     }
+--   },
+-- })
